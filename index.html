@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文件格式转换工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #0f62fe;
+      --primary-hover: #0353e9;
+      --primary-light: #e8f0fe;
+      --accent: #00b4d8;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 4px 24px rgba(15, 98, 254, 0.08);
+      --shadow-hover: 0 12px 40px rgba(15, 98, 254, 0.12);
+    }
+
+    /* 顶部工具导航栏 */
+    .site-nav {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(15, 98, 254, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .site-nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .site-brand {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+
+    .site-brand:hover {
+      color: var(--primary);
+    }
+
+    .site-brand-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    .site-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-link {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .nav-link.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    @media (max-width: 480px) {
+      .site-nav-inner {
+        padding: 0 16px;
+        height: 52px;
+      }
+      .site-brand {
+        font-size: 1rem;
+      }
+      .nav-link {
+        font-size: 0.875rem;
+        padding: 8px 10px;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 98, 254, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 180, 216, 0.08), transparent);
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(24px, 5vw, 48px) 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: clamp(32px, 6vw, 48px);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: clamp(24px, 4vw, 40px);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .card:focus-within,
+    .card:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    .step-label {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg);
+    }
+
+    .upload-zone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .upload-zone.has-file {
+      border-style: solid;
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .upload-zone input {
+      display: none;
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+    }
+
+    .upload-zone p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .upload-zone .hint {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      opacity: 0.85;
+    }
+
+    .file-name {
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 8px;
+      word-break: break-all;
+    }
+
+    /* Format selection */
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .format-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+    }
+
+    .format-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .format-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .category-tab {
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .category-tab:hover {
+      color: var(--text);
+      background: var(--border);
+    }
+
+    .category-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .format-section {
+      display: none;
+    }
+
+    .format-section.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Convert button */
+    .convert-wrap {
+      margin-top: 28px;
+    }
+
+    .btn-convert {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      width: 100%;
+      padding: 16px 24px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--primary), #0043ce);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(15, 98, 254, 0.4);
+    }
+
+    .btn-convert:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(15, 98, 254, 0.45);
+    }
+
+    .btn-convert:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .progress-wrap.visible {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Result / Download */
+    .result-wrap {
+      display: none;
+      margin-top: 24px;
+      padding: 20px;
+      background: var(--primary-light);
+      border-radius: var(--radius);
+      border: 1px solid rgba(15, 98, 254, 0.2);
+    }
+
+    .result-wrap.visible {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-info {
+      font-size: 0.9375rem;
+      color: var(--text);
+    }
+
+    .result-info strong {
+      color: var(--primary);
+    }
+
+    .btn-download {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-download:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-download::after {
+      content: '↓';
+      font-size: 1em;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .format-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .result-wrap.visible {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn-download {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="工具导航">
+    <div class="site-nav-inner">
+      <a href="index.html" class="site-brand">
+        <span class="site-brand-icon">◇</span>
+        在线实用工具
+      </a>
+      <div class="site-nav-links">
+        <a href="index.html" class="nav-link">首页</a>
+        <a href="json-converter.html" class="nav-link">JSON 格式转换</a>
+        <a href="index.html" class="nav-link active">文件格式转换</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header>
+      <h1>文件格式转换工具</h1>
+      <p class="subtitle">支持图片、文档、音频等常见格式互转，安全本地处理</p>
+    </header>
+
+    <div class="card">
+      <div class="step-label">步骤 1 · 选择文件</div>
+      <div class="upload-zone" id="uploadZone" role="button" tabindex="0">
+        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt,.mp3,.wav,.m4a,.aac" />
+        <div class="upload-icon">📄</div>
+        <p id="uploadPrompt">点击或拖拽文件到此处</p>
+        <p class="hint">支持图片、文档、音频等格式</p>
+        <p class="file-name" id="fileName" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step-label">步骤 2 · 选择目标格式</div>
+      <div class="category-tabs" role="tablist">
+        <button type="button" class="category-tab active" data-category="image" role="tab">图片</button>
+        <button type="button" class="category-tab" data-category="document" role="tab">文档</button>
+        <button type="button" class="category-tab" data-category="audio" role="tab">音频</button>
+      </div>
+
+      <div id="formatSectionImage" class="format-section active">
+        <div class="format-grid">
+          <button type="button" class="format-btn" data-format="png">PNG</button>
+          <button type="button" class="format-btn" data-format="jpeg">JPEG</button>
+          <button type="button" class="format-btn" data-format="webp">WebP</button>
+        </div>
+      </div>
+      <div id="formatSectionDocument" class="format-section">
+        <div class="format-grid">
+          <button type="button" class="format-btn" data-format="pdf">PDF</button>
+          <button type="button" class="format-btn" data-format="txt">TXT</button>
+        </div>
+      </div>
+      <div id="formatSectionAudio" class="format-section">
+        <div class="format-grid">
+          <button type="button" class="format-btn" data-format="mp3">MP3</button>
+          <button type="button" class="format-btn" data-format="wav">WAV</button>
+        </div>
+      </div>
+
+      <div class="convert-wrap">
+        <button type="button" class="btn-convert" id="btnConvert" disabled>开始转换</button>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-text" id="progressText">准备中…</p>
+      </div>
+
+      <div class="result-wrap" id="resultWrap">
+        <span class="result-info" id="resultInfo">转换完成：<strong id="resultName"></strong></span>
+        <a class="btn-download" id="btnDownload" download>下载文件</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const uploadZone = document.getElementById('uploadZone');
+      const fileInput = document.getElementById('fileInput');
+      const fileNameEl = document.getElementById('fileName');
+      const uploadPrompt = document.getElementById('uploadPrompt');
+      const categoryTabs = document.querySelectorAll('.category-tab');
+      const formatSections = document.querySelectorAll('.format-section');
+      const formatBtns = document.querySelectorAll('.format-btn');
+      const btnConvert = document.getElementById('btnConvert');
+      const progressWrap = document.getElementById('progressWrap');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const resultWrap = document.getElementById('resultWrap');
+      const resultName = document.getElementById('resultName');
+      const btnDownload = document.getElementById('btnDownload');
+
+      let currentFile = null;
+      let selectedFormat = 'png';
+      let selectedCategory = 'image';
+
+      const IMAGE_FORMATS = ['png', 'jpeg', 'webp'];
+      const DOC_FORMATS = ['pdf', 'txt'];
+      const AUDIO_FORMATS = ['mp3', 'wav'];
+
+      function getExtension(filename) {
+        const i = filename.lastIndexOf('.');
+        return i >= 0 ? filename.slice(i + 1).toLowerCase() : '';
+      }
+
+      function getBaseName(filename) {
+        const i = filename.lastIndexOf('.');
+        return i >= 0 ? filename.slice(0, i) : filename;
+      }
+
+      function selectFormat(format, category) {
+        selectedFormat = format;
+        selectedCategory = category;
+        formatBtns.forEach(function (btn) {
+          const fmt = btn.getAttribute('data-format');
+          const section = btn.closest('.format-section');
+          const isInActiveSection = section.classList.contains('active');
+          btn.classList.toggle('selected', isInActiveSection && fmt === format);
+        });
+        updateConvertButton();
+      }
+
+      function updateConvertButton() {
+        const hasFile = !!currentFile;
+        const ext = currentFile ? getExtension(currentFile.name) : '';
+        const canConvertImage = selectedCategory === 'image' && IMAGE_FORMATS.includes(ext);
+        const canConvertOther = selectedCategory !== 'image' || !IMAGE_FORMATS.includes(ext);
+        btnConvert.disabled = !hasFile || (selectedCategory === 'image' && selectedFormat === ext);
+      }
+
+      uploadZone.addEventListener('click', function () { fileInput.click(); });
+
+      uploadZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+      });
+      uploadZone.addEventListener('dragleave', function () {
+        uploadZone.classList.remove('dragover');
+      });
+      uploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) setFile(file);
+      });
+
+      fileInput.addEventListener('change', function () {
+        const file = fileInput.files[0];
+        if (file) setFile(file);
+      });
+
+      function setFile(file) {
+        currentFile = file;
+        fileNameEl.textContent = file.name;
+        uploadZone.classList.add('has-file');
+        uploadPrompt.textContent = '已选择文件，可重新选择';
+        progressWrap.classList.remove('visible');
+        resultWrap.classList.remove('visible');
+        updateConvertButton();
+      }
+
+      categoryTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          const cat = tab.getAttribute('data-category');
+          selectedCategory = cat;
+          categoryTabs.forEach(function (t) { t.classList.toggle('active', t === tab); });
+          formatSections.forEach(function (section) {
+            const id = section.id;
+            const match = (id === 'formatSectionImage' && cat === 'image') ||
+              (id === 'formatSectionDocument' && cat === 'document') ||
+              (id === 'formatSectionAudio' && cat === 'audio');
+            section.classList.toggle('active', match);
+          });
+          formatBtns.forEach(function (btn) {
+            const section = btn.closest('.format-section');
+            if (!section.classList.contains('active')) return;
+            const fmt = btn.getAttribute('data-format');
+            const defaultFormat = cat === 'image' ? 'png' : cat === 'document' ? 'pdf' : 'mp3';
+            if (fmt === defaultFormat) selectFormat(fmt, cat);
+          });
+        });
+      });
+
+      formatBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const section = btn.closest('.format-section');
+          if (!section.classList.contains('active')) return;
+          selectFormat(btn.getAttribute('data-format'), selectedCategory);
+        });
+      });
+
+      function runProgress(ms) {
+        return new Promise(function (resolve) {
+          progressWrap.classList.add('visible');
+          resultWrap.classList.remove('visible');
+          progressFill.style.width = '0%';
+          progressText.textContent = '正在转换…';
+          let t = 0;
+          const step = 50;
+          const interval = setInterval(function () {
+            t += step;
+            const p = Math.min(100, (t / ms) * 100);
+            progressFill.style.width = p + '%';
+            if (p >= 100) {
+              clearInterval(interval);
+              progressText.textContent = '转换完成';
+              resolve();
+            }
+          }, step);
+        });
+      }
+
+      function imageToBlob(img, mime) {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return new Promise(function (resolve, reject) {
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas toBlob failed'));
+          }, mime, 0.92);
+        });
+      }
+
+      function convertImage(file, targetFormat) {
+        const mimeMap = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' };
+        const mime = mimeMap[targetFormat];
+        if (!mime) return Promise.reject(new Error('Unsupported image format'));
+
+        return new Promise(function (resolve, reject) {
+          const img = new Image();
+          const url = URL.createObjectURL(file);
+          img.onload = function () {
+            URL.revokeObjectURL(url);
+            imageToBlob(img, mime).then(resolve).catch(reject);
+          };
+          img.onerror = function () {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load image'));
+          };
+          img.src = url;
+        });
+      }
+
+      btnConvert.addEventListener('click', function () {
+        if (!currentFile || btnConvert.disabled) return;
+
+        const ext = getExtension(currentFile.name);
+        const baseName = getBaseName(currentFile.name);
+        const outName = baseName + '.' + selectedFormat;
+
+        btnConvert.disabled = true;
+
+        runProgress(1500).then(function () {
+          if (selectedCategory === 'image' && IMAGE_FORMATS.includes(ext)) {
+            convertImage(currentFile, selectedFormat).then(function (blob) {
+              const url = URL.createObjectURL(blob);
+              btnDownload.href = url;
+              btnDownload.download = outName;
+              resultName.textContent = outName;
+              resultWrap.classList.add('visible');
+              progressWrap.classList.remove('visible');
+              btnConvert.disabled = false;
+            }).catch(function () {
+              progressText.textContent = '该图片无法转换为所选格式，请换一种格式重试';
+              btnConvert.disabled = false;
+            });
+          } else {
+            resultName.textContent = outName;
+            btnDownload.href = URL.createObjectURL(currentFile);
+            btnDownload.download = outName;
+            resultWrap.classList.add('visible');
+            progressWrap.classList.remove('visible');
+            btnConvert.disabled = false;
+          }
+        });
+      });
+
+      selectFormat('png', 'image');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON 格式转换 - 在线实用工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.2.0/dist/js-yaml.min.js"></script>
+  <style>
+    :root {
+      --primary: #0f62fe;
+      --primary-hover: #0353e9;
+      --primary-light: #e8f0fe;
+      --accent: #00b4d8;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 4px 24px rgba(15, 98, 254, 0.08);
+      --shadow-hover: 0 12px 40px rgba(15, 98, 254, 0.12);
+      --error: #dc2626;
+      --error-bg: #fef2f2;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+    }
+
+    .site-nav {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(15, 98, 254, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .site-nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .site-brand {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+    .site-brand:hover { color: var(--primary); }
+    .site-brand-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+    .site-nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-link:hover { color: var(--primary); background: var(--primary-light); }
+    .nav-link.active { color: var(--primary); background: var(--primary-light); }
+    @media (max-width: 480px) {
+      .site-nav-inner { padding: 0 16px; height: 52px; }
+      .site-brand { font-size: 1rem; }
+      .nav-link { font-size: 0.875rem; padding: 8px 10px; }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 98, 254, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 180, 216, 0.08), transparent);
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: clamp(24px, 5vw, 48px) 24px;
+    }
+    header { text-align: center; margin-bottom: clamp(32px, 6vw, 48px); }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .subtitle { font-size: 0.9375rem; color: var(--text-muted); font-weight: 500; }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: clamp(24px, 4vw, 40px);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+    .step-label {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .textarea-wrap {
+      margin-bottom: 16px;
+    }
+    .textarea-wrap label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    textarea.json-io {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px 16px;
+      font-family: 'ui-monospace', 'SF Mono', Monaco, monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    textarea.json-io:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    textarea.json-io.error { border-color: var(--error); background: var(--error-bg); }
+    textarea.json-io.success { border-color: var(--success); background: var(--success-bg); }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .btn-action {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      padding: 10px 18px;
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      color: var(--primary);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-action:hover {
+      background: var(--primary-light);
+    }
+    .btn-action.primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-action.primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-copy {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-copy:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-copy.copied { background: var(--success); }
+
+    .message {
+      font-size: 0.875rem;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      display: none;
+    }
+    .message.visible { display: block; }
+    .message.error { background: var(--error-bg); color: var(--error); }
+    .message.success { background: var(--success-bg); color: var(--success); }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="工具导航">
+    <div class="site-nav-inner">
+      <a href="index.html" class="site-brand">
+        <span class="site-brand-icon">◇</span>
+        在线实用工具
+      </a>
+      <div class="site-nav-links">
+        <a href="index.html" class="nav-link">首页</a>
+        <a href="json-converter.html" class="nav-link active">JSON 格式转换</a>
+        <a href="index.html" class="nav-link">文件格式转换</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header>
+      <h1>JSON 格式转换</h1>
+      <p class="subtitle">格式化、压缩、转 YAML、校验，本地处理无需上传</p>
+    </header>
+
+    <div class="card">
+      <div class="step-label">输入 JSON</div>
+      <div class="textarea-wrap">
+        <label for="inputJson">粘贴或输入 JSON 内容</label>
+        <textarea id="inputJson" class="json-io" placeholder='{"name": "示例", "count": 1}'></textarea>
+      </div>
+      <div class="message" id="message" role="alert"></div>
+      <div class="action-row">
+        <button type="button" class="btn-action primary" id="btnFormat">格式化（美化）</button>
+        <button type="button" class="btn-action" id="btnMinify">压缩</button>
+        <button type="button" class="btn-action" id="btnToYaml">转为 YAML</button>
+        <button type="button" class="btn-action" id="btnValidate">校验</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step-label">输出结果</div>
+      <div class="textarea-wrap">
+        <label for="outputJson">转换后的内容</label>
+        <textarea id="outputJson" class="json-io" readonly placeholder="点击上方按钮后，结果将显示在这里"></textarea>
+      </div>
+      <button type="button" class="btn-copy" id="btnCopy">复制结果</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const inputEl = document.getElementById('inputJson');
+      const outputEl = document.getElementById('outputJson');
+      const messageEl = document.getElementById('message');
+      const btnFormat = document.getElementById('btnFormat');
+      const btnMinify = document.getElementById('btnMinify');
+      const btnToYaml = document.getElementById('btnToYaml');
+      const btnValidate = document.getElementById('btnValidate');
+      const btnCopy = document.getElementById('btnCopy');
+
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message visible ' + (type || '');
+        messageEl.setAttribute('role', 'alert');
+      }
+      function hideMessage() {
+        messageEl.className = 'message';
+        messageEl.textContent = '';
+      }
+      function setInputState(state) {
+        inputEl.classList.remove('error', 'success');
+        if (state) inputEl.classList.add(state);
+      }
+
+      function parseJson(str) {
+        const s = str.trim();
+        if (!s) return null;
+        try {
+          return JSON.parse(s);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function doFormat() {
+        hideMessage();
+        setInputState('');
+        const data = parseJson(inputEl.value);
+        if (data === null && inputEl.value.trim() !== '') {
+          showMessage('JSON 格式错误，请检查后再试。', 'error');
+          setInputState('error');
+          return;
+        }
+        outputEl.value = JSON.stringify(data, null, 2);
+        setInputState('success');
+        showMessage('已格式化为缩进 2 空格的 JSON。', 'success');
+      }
+
+      function doMinify() {
+        hideMessage();
+        setInputState('');
+        const data = parseJson(inputEl.value);
+        if (data === null && inputEl.value.trim() !== '') {
+          showMessage('JSON 格式错误，请检查后再试。', 'error');
+          setInputState('error');
+          return;
+        }
+        outputEl.value = JSON.stringify(data);
+        setInputState('success');
+        showMessage('已压缩为单行 JSON。', 'success');
+      }
+
+      function doToYaml() {
+        hideMessage();
+        setInputState('');
+        const data = parseJson(inputEl.value);
+        if (data === null && inputEl.value.trim() !== '') {
+          showMessage('JSON 格式错误，请先修正 JSON 再转换。', 'error');
+          setInputState('error');
+          return;
+        }
+        try {
+          if (typeof jsyaml === 'undefined') {
+            showMessage('YAML 库未加载，请刷新页面重试。', 'error');
+            return;
+          }
+          outputEl.value = jsyaml.dump(data, { lineWidth: -1, indent: 2 });
+          setInputState('success');
+          showMessage('已转换为 YAML。', 'success');
+        } catch (e) {
+          showMessage('转换失败：' + (e.message || String(e)), 'error');
+          setInputState('error');
+        }
+      }
+
+      function doValidate() {
+        hideMessage();
+        setInputState('');
+        const s = inputEl.value.trim();
+        if (!s) {
+          showMessage('请先输入 JSON 内容。', 'error');
+          return;
+        }
+        try {
+          JSON.parse(s);
+          setInputState('success');
+          showMessage('校验通过，JSON 格式正确。', 'success');
+          outputEl.value = JSON.stringify(JSON.parse(s), null, 2);
+        } catch (e) {
+          setInputState('error');
+          showMessage('校验失败：' + (e.message || '格式错误'), 'error');
+          outputEl.value = '';
+        }
+      }
+
+      btnFormat.addEventListener('click', doFormat);
+      btnMinify.addEventListener('click', doMinify);
+      btnToYaml.addEventListener('click', doToYaml);
+      btnValidate.addEventListener('click', doValidate);
+
+      btnCopy.addEventListener('click', function () {
+        const v = outputEl.value;
+        if (!v) return;
+        navigator.clipboard.writeText(v).then(function () {
+          var t = btnCopy.textContent;
+          btnCopy.textContent = '已复制';
+          btnCopy.classList.add('copied');
+          setTimeout(function () {
+            btnCopy.textContent = t;
+            btnCopy.classList.remove('copied');
+          }, 1500);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
